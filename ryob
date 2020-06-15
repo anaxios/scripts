@@ -1,0 +1,137 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+DEFAULTKEY="sophronios"
+DEFAULTIN="/Users/sophronios/PARA"
+DEFAULTOUT="/Users/sophronios/encrypted"
+
+ARGS=($@)
+PGPKEY=${4:-$DEFAULTKEY}
+
+hasFlag() {
+    local flag=${1}
+    for arg in $ARGS; do
+        if [ "$flag" == "$arg" ]; then
+            echo "true"
+        fi
+    done
+    echo "false"
+}
+
+cleanup() {
+ if $(expr "$1" : '.*\(.gpg\)'); then	rm "$1"; fi
+}
+
+isModSince() {
+    # set -x
+    local inDir="$1"
+    local outDir="$2"
+    local modIn=$(stat -f "%m" "$inDir" )
+    # get modified time if file exists
+    if [[ -e "$outDir" ]]; then
+        local modOut=$(stat -f "%m" "$outDir")
+    else
+        local modOut="0"
+    fi
+
+    if [[ $modIn -gt $modOut ]]; then
+        echo "true"
+    else
+        echo "false"
+    fi
+
+    # set +x
+}
+
+encrypt() {
+    local inDir="$1"
+    local outDir="$2"
+
+    if ! $(expr "$inDir" : '.*\(.gpg\)') && $(isModSince "$inDir" "$outDir/$inDir.gpg"); then
+        gpg --batch --yes -r "$PGPKEY" --output "$outDir"/"$inDir".gpg -e -s "$inDir"
+    fi
+}
+
+decrypt() {
+    local inDir="$1"
+    local outDir="$2"
+
+    if [ $(expr "$inDir" : '.*\(.gpg\)') ] && $(isModSince "$inDir" "$outDir"/"${inDir%.gpg}"); then
+	      gpg --batch --yes -r "$PGPKEY" --output "$outDir/${inDir%.gpg}" -d "$inDir"
+    fi
+}
+
+checkDir() {
+	  if [ ! -d "$1" ] ; then
+        echo "$1 is not a directory";
+        exit 1;
+    fi
+    if [ ! -d "$2" ] ; then
+        echo "$2 is not a directory";
+        exit 1;
+    fi
+}
+
+makeDirIfNotExist() {
+    if [ ! -e "$1" ]; then mkdir -p "$1"; fi
+}
+
+listfile() {
+   # local saveIFS=$IFS 
+    local command="$1"
+    local inDir="$2"
+    local outDir="$3"
+
+    makeDirIfNotExist "$outDir/$inDir"
+
+    # IFS=$(echo -en "\n\b")
+	  for file in "$inDir"/*; do
+        # IFS=$saveIFS
+				if [ -f "$file" ]; then
+            echo "$command: $file"
+			      $($command "${file[@]}" "$outDir")
+        elif [ -d "$file" ]; then
+            makeDirIfNotExist "$outDir/$file"
+				    listfile "$command" "${file[@]}" "$outDir"
+		    fi
+	  done
+}
+
+
+
+main() {
+    local command="$1"
+    local inDir="$2"
+    local outDir="$3"
+
+    if $(hasFlag -e); then
+		    checkDir "$inDir" "$outDir"
+		    listfile encrypt "$inDir" "$outDir"
+        exit 0
+    fi
+
+    if $(hasFlag -d); then
+			  checkDir "$inDir" "$outDir"
+        # listDir "$INPUTDIR"
+		    listfile decrypt "$inDir" "$outDir"
+        exit 0
+    fi
+
+    # if $(hasFlag -c); then
+		#     listfile cleanup "$INPUTDIR"
+    #     exit 0
+    # fi
+
+        echo
+        echo "Option: -e to encrypt, -d to decrypt, -c to remove .gpg files"
+        echo "-e and -d require input and output folders"
+        echo "-c requires only input folder"
+        echo "to use key other than default put as 4th arg"
+        echo
+        exit 0
+
+}
+
+main ${ARGS[@]}

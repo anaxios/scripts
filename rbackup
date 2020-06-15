@@ -1,0 +1,5 @@
+#!/bin/bash
+
+date=$(date "+%FT%H-%M-%S") # rsync interprets ":" as separator between host and port (i. e. host:port), so we cannot use %T or %H:%M:%S here, so we use %H-%M-%S
+rsync -aP --link-dest=$HOME/Backups/current $HOME/Downloads/ $HOME/Backups/back-$date
+ln -nfs $HOME/Backups/back-$date $HOME/Backups/current
