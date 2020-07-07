@@ -1,5 +1,46 @@
 fu = {}
 
+function find(e,xs)
+  if (isempty(xs)) then
+    return false 
+  elseif (e == xs[1]) then
+    return true
+  else
+    return find(e, tail(xs))
+  end
+end
+
+function notuniq(xs)
+  function dubitr(acc, xs)
+    local r 
+    if fu.isempty(xs) then
+      return acc 
+    elseif (find(xs[1],fu.tail(xs)) and not find(xs[1], acc)) then
+      r = xs[1]
+      return dubitr(table.insert(acc, r), fu.tail(xs))
+    else
+      return dubitr(acc, fu.tail(xs))
+    end
+  end
+  return dubitr({}, xs)
+end
+
+function uniq(xs)
+  local duplicates = notuniq(xs)
+  local acc = {}
+  function uniqitr(acc, d, xs)
+    if (isempty(xs)) then
+      return acc
+    elseif (find(xs[1],d)) then
+      return uniqitr(acc, d, tail(xs))
+    else
+      table.insert(acc, xs[1])
+      return uniqitr(acc, d, tail(xs))
+    end
+  end
+  return uniqitr(acc, duplicates, xs)
+end
+
 local function head(xs)
   return xs[1]
 end
@@ -50,6 +91,10 @@ end
 
 
 fu = {
+  find = find,
+  uniq = uniq,
+  notuniq = notuniq,
+  head = head,
   tail = tail,
   isempty = isempty,
   foldr = foldr,
