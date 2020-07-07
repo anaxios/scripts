@@ -2,8 +2,33 @@
 table = require "std.table"
 fu = require "./fu"
 
+function find(e,xs)
+  if (fu.isempty(xs)) then
+    return false 
+    elseif (e == xs[1]) then
+    return true
+    else
+      return find(e, fu.tail(xs))
+  end
+end
 
-function duplicate(xs)
+function uniq(xs)
+  local duplicates = notuniq(xs)
+  local acc = {}
+  function uniqitr(acc, d, xs)
+    if (fu.isempty(xs)) then
+      return acc
+    elseif (find(xs[1],d)) then
+      return uniqitr(acc, d, fu.tail(xs))
+    else
+      table.insert(acc, xs[1])
+      return uniqitr(acc, d, fu.tail(xs))
+    end
+  end
+  return uniqitr(acc, duplicates, xs)
+end
+
+function notuniq(xs)
 local function compareFirst(x)
     return function(y) 
       return x == y
@@ -29,6 +54,8 @@ function main()
   --   mylist[i] = 1
   -- end
 
-  print(table.concat(duplicate(mylist)))
+  print(table.concat(notuniq(mylist)))
+  print(table.concat(uniq(mylist)))
+  print(find(8,mylist))
 end
 main()
