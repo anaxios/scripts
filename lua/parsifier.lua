@@ -1,51 +1,34 @@
 #!/usr/local/bin/luajit
+table = require "std.table"
+fu = require "./fu"
 
-function head(xs)
-  return xs[1]
-end
 
-function tail(xs)
-  local ys = unpack(xs)
-  table.remove(ys, 1)
-  return ys
-end
-
-local function isempty(s)
-  return s == nil or s == '' or #s <= 0
-end
-
-function foldl(f, acc, xs)
-  if isempty(xs)  then
-    return acc
-  else
-    return foldl(f, f(acc, head(xs)), tail(xs))
+function duplicate(xs)
+local function compareFirst(x)
+    return function(y) 
+      return x == y
+    end
   end
-end
-
-function foldr(f, acc, xs)
-  if isempty(xs)  then
-    return acc
-  else
-    return f(head(xs), foldr(f, acc, tail(xs)))
+  function dubitr(acc, xs)
+    local r 
+    if fu.isempty(xs) then
+      return acc 
+    elseif (#(fu.filter(compareFirst(xs[1]),fu.tail(xs))) > 0) then
+      r = xs[1]
+      return dubitr(table.insert(acc, r), fu.tail(xs))
+    else
+      return dubitr(acc, fu.tail(xs))
+    end
   end
+  return dubitr({}, xs)
 end
-
-function map(f, xs)
-  if isempty(xs) then
-    return {} 
-  else
-    return foldl(function(acc, x) table.insert(acc, f(x)) return acc  end, {}, xs)
-  end
-end
-
 
 function main()
-  local mylist = {1,2,3,4,5,6,7,8}
+  local mylist = {3,1,3,4,5,4,7,8,3,4,7,6,4,8,6,9,6,4,3,2,4,4}
+  -- for i=1, 100 do
+  --   mylist[i] = 1
+  -- end
 
-
-  print(table.concat(mylist, ","))
-  print(table.concat((map(function(x) return 1 + x end, mylist))))
-  print((foldl(function(a, x) return a + x end, 0, mylist)))
-
+  print(table.concat(duplicate(mylist)))
 end
 main()

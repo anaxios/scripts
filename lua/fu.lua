@@ -1,22 +1,22 @@
 fu = {}
 
-function head(xs)
+local function head(xs)
   return xs[1]
 end
 
-function tail(xs)
-  -- local ys = table.clone(xs)
-  -- table.remove(ys, 1)
-  -- return ys
-  table.remove(xs, 1)
-  return xs
+local function tail(xs)
+  local ys = table.clone(xs)
+  table.remove(ys, 1)
+  return ys
+  -- table.remove(xs, 1)
+  -- return xs
 end
 
 local function isempty(s)
   return s == nil or s == '' or #s <= 0
 end
 
-function foldl(f, acc, xs)
+local function foldl(f, acc, xs)
   if isempty(xs)  then
     return acc
   else
@@ -24,7 +24,7 @@ function foldl(f, acc, xs)
   end
 end
 
-function foldr(f, acc, xs)
+local function foldr(f, acc, xs)
   if isempty(xs)  then
     return acc
   else
@@ -32,7 +32,7 @@ function foldr(f, acc, xs)
   end
 end
 
-function map(f, xs)
+local function map(f, xs)
   if isempty(xs) then
     return {} 
   else
@@ -40,7 +40,7 @@ function map(f, xs)
   end
 end
 
-function filter(f, xs)
+local function filter(f, xs)
   if isempty(xs) then
     return {}
   else
@@ -48,4 +48,15 @@ function filter(f, xs)
   end
 end
 
+
+fu = {
+  tail = tail,
+  isempty = isempty,
+  foldr = foldr,
+  foldl = foldl,
+  map = map,
+  filter = filter,
+}
+
 return fu
+
