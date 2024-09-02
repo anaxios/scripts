@@ -8,6 +8,7 @@ readonly h265="hevc_vaapi"
 readonly monitor_1=":0.0"
 readonly monitor_2=":0.0+1920,0"
 readonly dac="alsa_output.usb-Burr-Brown_from_TI_USB_Audio_CODEC-00.analog-stereo-output.monitor"
+readonly snowball="alsa_input.usb-BLUE_MICROPHONE_Blue_Snowball_201306-00.mono-fallback"
 
 framerate=30
 qp=28
@@ -38,12 +39,17 @@ stream() {
                -f pulse \
                -ac 2 \
                -i "${audio_device}" \
-               -vf 'hwupload,scale_vaapi=format=nv12' \
+               -f pulse \
+               -ac 2 \
+               -i "${snowball}" \
+               -vf 'format=p010|nv12|vaapi,hwupload' \
+               -filter_complex [2]afftdn=nf=-25[m],[1][m]amerge=inputs=2 \
                -c:v "${codec}" \
                -qp "${qp}" \
                -f flv \
                "${1}"
-}
+} 
+# ,scale_vaapi=format=nv12
 
 record() {
         ffmpeg -vaapi_device /dev/dri/renderD128 \
@@ -54,7 +60,11 @@ record() {
                -f pulse \
                -ac 2 \
                -i "${audio_device}" \
-               -vf 'hwupload,scale_vaapi=format=nv12' \
+               -f pulse \
+               -ac 2 \
+               -i "${snowball}" \
+               -vf 'format=p010|nv12|vaapi,hwupload' \
+               -filter_complex [2]afftdn=nf=-25[m],[1][m]amerge=inputs=2 \
                -c:v "${codec}" \
                -qp "${qp}" \
                "$(date '+%Y-%m-%d_%H-%M-%S').mkv"
@@ -76,9 +86,8 @@ while getopts "hRr:q:s:a:c:m:l:" arg; do
       audio_device=${OPTARG}
       ;;
     c) # Specify a codec either h264 or h265.
-      [ ${OPTARG} == "h264" ] && codec=${h264}
-      [ ${OPTARG} == "h265" ] && codec=${h265}
-
+      [ "${OPTARG}" = "h264" ] && codec=${h264}
+      [ "${OPTARG}" = "h265" ] && codec=${h265}
       ;;
     m) # Specify the monitor 1 or 2.
       [ ${OPTARG} -eq 1 ] && monitor=${monitor_1}
