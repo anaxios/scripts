@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+readonly video_1440="2560x1440"
+readonly video_1080="1920x1080"
+readonly h264="h264_vaapi"
+readonly h265="hevc_vaapi"
+readonly monitor_1=":0.0"
+readonly monitor_2=":0.0+1920,0"
+readonly dac="alsa_output.usb-Burr-Brown_from_TI_USB_Audio_CODEC-00.analog-stereo-output.monitor"
+
+framerate=60
+qp=28
+video_size="${video_1440}"
+audio_device="${dac}"
+monitor="${monitor_2}"
+codec="${h264}"
+
+usage() { echo "$0 usage:" && grep " .)\ #" $0; exit 0; }
+[ $# -eq 0 ] && usage
+
+stream() {
+        ffmpeg -vaapi_device /dev/dri/renderD128 \
+               -f x11grab \
+               -video_size "${video_size}" \
+               -framerate "${framerate}"\
+               -i "${monitor}" \
+               -f pulse \
+               -ac 2 \
+               -i "${audio_device}" \
+               -vf 'hwupload,scale_vaapi=format=nv12' \
+               -c:v "${codec}" \
+               -qp "${qp}" \
+               -f flv \
+               "${1}"
+}
+
+record() {
+        ffmpeg -vaapi_device /dev/dri/renderD128 \
+               -f x11grab \
+               -video_size "${video_size}" \
+               -framerate "${framerate}"\
+               -i "${monitor}" \
+               -f pulse \
+               -ac 2 \
+               -i "${audio_device}" \
+               -vf 'hwupload,scale_vaapi=format=nv12' \
+               -c:v "${codec}" \
+               -qp "${qp}" \
+               "$(date '+%Y-%m-%d_%H-%M-%S').mkv"
+}
+
+while getopts "hRr:q:s:a:c:m:l:" arg; do
+  case $arg in
+    r) # Specify framerate 25, 30 or 60.
+      framerate=${OPTARG}
+      ;;
+    q) # Specify a quality profile. defaults to 28.
+      qp=${OPTARG}
+      ;;
+    s) # Specify a the size of the screen eg. 1920x1080.
+      [ ${OPTARG} -eq 1920 ] && video_size=${video_1080}
+      [ ${OPTARG} -eq 1440 ] && video_size=${video_1440}
+      ;;
+    a) # Specify an audio device.
+      audio_device=${OPTARG}
+      ;;
+    c) # Specify a codec either h264 or h265.
+      [ ${OPTARG} == "h264" ] && codec=${h264}
+      [ ${OPTARG} == "h265" ] && codec=${h265}
+
+      ;;
+    m) # Specify the monitor 1 or 2.
+      [ ${OPTARG} -eq 1 ] && monitor=${monitor_1}
+      [ ${OPTARG} -eq 2 ] && monitor=${monitor_2}
+      ;;
+    l) # Go live and start streaming.
+        stream ${OPTARG}
+      ;;
+    R) # Go live and start recording to file in current directory.
+        record 
+      ;;
+    h | *) # Display help.
+      usage
+      exit 0
+      ;;
+  esac
+done
+
