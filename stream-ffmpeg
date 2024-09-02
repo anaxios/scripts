@@ -9,12 +9,22 @@ readonly monitor_1=":0.0"
 readonly monitor_2=":0.0+1920,0"
 readonly dac="alsa_output.usb-Burr-Brown_from_TI_USB_Audio_CODEC-00.analog-stereo-output.monitor"
 
-framerate=60
+framerate=30
 qp=28
 video_size="${video_1440}"
 audio_device="${dac}"
 monitor="${monitor_2}"
 codec="${h264}"
+
+retry() {
+    ${@} # <- this runs a function
+    if [ $? -eq 255 ]; then 
+        exit
+    else
+        sleep 3
+        retry "${@}"
+    fi
+}
 
 usage() { echo "$0 usage:" && grep " .)\ #" $0; exit 0; }
 [ $# -eq 0 ] && usage
@@ -75,10 +85,10 @@ while getopts "hRr:q:s:a:c:m:l:" arg; do
       [ ${OPTARG} -eq 2 ] && monitor=${monitor_2}
       ;;
     l) # Go live and start streaming.
-        stream ${OPTARG}
+        retry stream ${OPTARG}
       ;;
     R) # Go live and start recording to file in current directory.
-        record 
+        retry record 
       ;;
     h | *) # Display help.
       usage
