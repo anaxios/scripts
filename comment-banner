@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+line_length=80
+comment_symb="#"
+
+repeat() 
+{
+    local tmp=""
+    for i in `seq ${1}`; do
+        tmp="${tmp}${2}"
+    done
+    echo -n "${tmp}"
+}
+
+center() 
+{
+    text="${@}"
+    text_len=${#text}
+    padding="$(repeat $(( (${line_length} - 2 - ${text_len} ) / 2 )) " ")"
+    if (( (${line_length} - 2 - ${text_len} ) % 2 == 0 )); then
+        local padding2="${padding}" 
+    else 
+        local padding2="${padding} "
+    fi
+    printf "%s${padding}%s${padding2}%s\n" "${comment_symb}" "${text}" "${comment_symb}"
+}
+
+blank_line() 
+{
+printf "${comment_symb}$(repeat $(( ${line_length}-2 )) " " )${comment_symb}\n"
+}
+
+repeat ${line_length} ${comment_symb}; echo ""
+blank_line
+
+while read -r line; do
+    center "${line}"
+done < "${1:-/dev/stdin}"
+
+blank_line
+repeat ${line_length} ${comment_symb}; echo ""
