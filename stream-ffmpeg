@@ -11,19 +11,21 @@ readonly dac="alsa_output.usb-Burr-Brown_from_TI_USB_Audio_CODEC-00.analog-stere
 readonly snowball="alsa_input.usb-BLUE_MICROPHONE_Blue_Snowball_201306-00.mono-fallback"
 
 framerate=30
-qp=24
+qp=20
 video_size="${video_1440}"
 audio_device="${dac}"
 monitor="${monitor_2}"
 codec="${h264}"
 url=
+testing=
+
 
 usage() { echo "$0 usage:" && grep " .)\ #" $0; exit 0; }
 #[ $# -eq 0 ] && usage
 
 retry() {
         ${@} # <- this runs a function
-        if [ $? -eq 255 ]; then 
+        if [ $? -eq 255 ]; then
                 exit
         else
                 sleep 3
@@ -44,34 +46,41 @@ stream() {
                -ac 2 \
                -i "${snowball}" \
                -vf 'format=p010|nv12|vaapi,hwupload' \
-               -filter_complex [2]afftdn=nf=-25[m],[1][m]amerge=inputs=2 \
+               -filter_complex [2]afftdn=nr=15:nf=-40:tn=1[m],[m]volume=5dB[n],[1][n]amerge=inputs=2 \
                -c:v "${codec}" \
                -qp "${qp}" \
-               -f flv \
-               "${1}"
-} 
-# ,scale_vaapi=format=nv12
+               "$(date '+%Y-%m-%d_%H-%M-%S').mkv"
+}
 
-record() {
+test() {
         ffmpeg -vaapi_device /dev/dri/renderD128 \
                -f x11grab \
                -video_size "${video_size}" \
                -framerate "${framerate}"\
                -i "${monitor}" \
                -f pulse \
-               -ac 2 \
                -i "${audio_device}" \
                -f pulse \
-               -ac 2 \
                -i "${snowball}" \
                -vf 'format=p010|nv12|vaapi,hwupload' \
-               -filter_complex [2]afftdn=nf=-25[m],[1][m]amerge=inputs=2 \
-               -c:v "${codec}" \
+               -filter_complex [2]afftdn=nf=-40[m],[m]volume=5dB[n],[1][n]amerge=inputs=2 \
+               -c:v "${h264}"\
                -qp "${qp}" \
-               "$(date '+%Y-%m-%d_%H-%M-%S').mkv"
+               -b:v 16000k \
+               -maxrate 16000k \
+               -bufsize 16000k \
+               -g 50 \
+               -c:a aac \
+               -b:a 160k \
+               -ac 2 \
+               -ar 44100 \
+               -f flv \
+               "${1}"
 }
 
-while getopts "hr:q:s:a:c:m:l:" arg; do
+# -filter_complex [2]afftdn=nf=-25[m],[1][m]amerge=inputs=2 \
+
+while getopts "hr:q:s:a:c:m:l:t:" arg; do
   case $arg in
     r) # Specify framerate 25, 30 or 60.
       framerate=${OPTARG}
@@ -97,6 +106,9 @@ while getopts "hr:q:s:a:c:m:l:" arg; do
     l) # Go live and start streaming.
         url="${OPTARG}"
       ;;
+    t) # testing stream
+        testing="${OPTARG}"
+      ;;
     h | *) # Display help.
       usage
       exit 0
@@ -104,8 +116,10 @@ while getopts "hr:q:s:a:c:m:l:" arg; do
   esac
 done
 
-if [ ! -z "${url}" ]; then 
+if [ ! -z "${url}" ]; then
         retry stream ${url}
+elif [ ! -z "${testing}" ]; then
+        test ${testing}
 else
         retry record
 fi
