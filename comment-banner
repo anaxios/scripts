@@ -5,20 +5,20 @@ comment_symb="#"
 
 repeat() 
 {
-    local tmp=""
-    for i in `seq ${1}`; do
-        tmp="${tmp}${2}"
-    done
-    echo -n "${tmp}"
+	local tmp=""
+	for i in `seq ${1}`; do
+		tmp="${tmp}${2}"
+	done
+	echo -n "${tmp}"
 }
 
 center() 
 {
-    text="${@}"
-    text_len=${#text}
-    padding_left="$(repeat $(( (line_length - 2 - text_len ) / 2 )) " ")"
-    padding_right="$(repeat $(( (line_length - 2 - text_len ) / 2 + (text_len & 1) )) " ")"
-    printf "%s${padding_left}%s${padding_right}%s\n" "${comment_symb}" "${text}" "${comment_symb}"
+	text="${@}"
+	text_len=${#text}
+	padding_left="$(repeat $(( (line_length - 2 - text_len ) / 2 )) " ")"
+	padding_right="$(repeat $(( (line_length - 2 - text_len ) / 2 + (text_len & 1) )) " ")"
+	printf "%s${padding_left}%s${padding_right}%s\n" "${comment_symb}" "${text}" "${comment_symb}"
 }
 
 blank_line() 
@@ -30,7 +30,7 @@ repeat ${line_length} ${comment_symb}; echo ""
 blank_line
 
 while read -r line; do
-    center "${line}"
+	center "${line}"
 done < "${1:-/dev/stdin}"
 
 blank_line
