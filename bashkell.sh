@@ -8,7 +8,7 @@ declare -a files=("$(list "$@") $(ls -R "$@" | grep -e '^/' | sed -e 's/://' -e 
 
     #list $files # debug list files
 
-    # maps shasum over all the directories and calls all the files inside. Also using sed to put white spaces back in   
+    # maps shasum over all the directories and calls all the files inside. Also using sed to put white spaces back in
     # files names
 hashes=$(list $files | map lambda x . 'shasum -a 256 $(echo $x | sed -e 's/√/[[:space:]]/g' )/* 2> /dev/null')
 
