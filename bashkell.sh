@@ -1,4 +1,5 @@
-#!/usr/local/bin/bash
+#!/usr/bin/env bash
+
 . fun.sh    # Using super nerdy functional library as dependency
 
     # Recursively get directories by using ls -R and removing everything but the full paths of the directories. Also replacing
@@ -17,7 +18,7 @@ tupify() {
 
     tupify_itr() {
         local x=$@
-        
+
         while [[ -n $x ]]; do
             r+=( $(tup $(list $x | take 2)) )
             x=$(list $x | drop 2)      #recursively called
@@ -36,7 +37,7 @@ checkForMatch() {
     compareHead() {
         local IN=$1
         h=$(list $x | lhead)
-        
+
         if [ $h == $IN ]; then
             echo $h
         fi
@@ -44,9 +45,9 @@ checkForMatch() {
 
     while [[ -n $x ]]; do
         r+=( $(list $x | ltail | map lambda a . 'compareHead $a' ) )
-        x=$(list $x | ltail)    
-    done 
-    echo ${r[@]} 
+        x=$(list $x | ltail)
+    done
+    echo ${r[@]}
 }
 
 
@@ -67,7 +68,7 @@ list $(list $(tupify $hashes) | map lambda x . 'tupl $x') | uniq -c | grep -v '^
 
 #     tupify_itr() {
 #         local x=$@
-        
+
 #         if [[ -z $x ]]; then
 #            echo ${r[@]}
 #         else
@@ -89,22 +90,22 @@ list $(list $(tupify $hashes) | map lambda x . 'tupl $x') | uniq -c | grep -v '^
 #         compareHead() {
 #             local IN=$1
 #             local a=$h
-            
+
 #             if [ $a = $IN ]; then
 #                 echo $IN
 #             fi
 #         }
 
-#         if [[ -z $x ]]; then 
+#         if [[ -z $x ]]; then
 #             echo ${r[@]}
-#         else  
+#         else
 #             r+=( $(list $x | ltail | map lambda a . 'compareHead $a' ))
 #             checkForMatch_itr $(list $x | ltail)      # $( r+=( $(list $x | ltail | map lambda x . 'compareHead $x') ${r[@]} )  ) # called recursively
-#         fi   
+#         fi
 #     }
 
 #     # remove hashes from the tuples
 #     checkForMatch_itr $(list $@ | map lambda x . 'tupl $x')
-    
-     
+
+
 # }
