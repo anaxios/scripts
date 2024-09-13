@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# copyright belongs to Evil Bob All rights reserved.
+################################################################################
+#                                                                              #
+#              copyright belongs to Evil Bob All rights reserved.              #
+#                                                                              #
+################################################################################
 
 readonly video_1440="2560x1440"
 readonly video_1080="1920x1080"
@@ -54,7 +58,7 @@ retry() {
 #}
 # ,scale_vaapi=format=nv12
 
-record-old() 
+record-old()
 {
 	ffmpeg -vaapi_device /dev/dri/renderD128 \
 		-f x11grab \
@@ -74,7 +78,7 @@ record-old()
 		"$(date '+%Y-%m-%d_%H-%M-%S').mkv"
 }
 
-record() 
+record()
 {
 	ffmpeg -hwaccel cuda -hwaccel_output_format cuda \
 		-f x11grab \
@@ -96,7 +100,7 @@ record()
 		"$(date '+%Y-%m-%d_%H-%M-%S').mkv"
 }
 
-test() 
+test()
 {
 	ffmpeg -hwaccel cuda -hwaccel_output_format cuda \
 		-f x11grab \
