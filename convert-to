@@ -6,11 +6,11 @@ BITRATE=$(( $(ffprobe -v quiet -select_streams v:0 -show_entries stream=bit_rate
 TMP_FILE="${RANDOM}.mkv"
 #OUT_FILE="$(basename ${IN_FILE} .mp4 | sed -e 's/h264m/h265m/').mkv"
 OUT_FILE="$(basename ${IN_FILE} .mp4)"
-
+#OUT_FILE="${OUT_FILE}-yts.mkv"
+OUT_FILE="${OUT_FILE}-nvenc.mkv"
 
 convert_yts() 
 {
-	OUT_FILE="${OUT_FILE}-yts.mkv"
 	ffmpeg -y -i "${IN_FILE}" \
 		-c:v libx264 \
 		-crf 27 \
@@ -24,7 +24,6 @@ convert_yts()
 
 convert_hevc() 
 {
-	OUT_FILE="${OUT_FILE}-nvenc.mkv"
 	ffmpeg -y -hwaccel cuda -hwaccel_output_format cuda \
 		-i "${IN_FILE}" \
 		-c:v hevc_nvenc \
@@ -47,7 +46,7 @@ remove-tmp()
 trap remove-tmp EXIT
 
 if [[ ! -f "${OUT_FILE}" ]]; then
-	convert_yts "${IN_FILE}"
+	convert_hevc "${IN_FILE}"
 
 	if [ $? -eq 0 ]; then
 		mv "${TMP_FILE}" "${OUT_FILE}"
