@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/usr/bin/env bash
 
 
 . fun.sh
@@ -38,3 +38,4 @@
 sum() { [[ $1 -le 0 ]] && echo $2 || sum $(($1 - 1)) $(($1 + $2)) ; }
 
 echo $(sum 10000 0)
+
